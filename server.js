@@ -17,6 +17,7 @@ const PORT = process.env.PORT || 5000;
 const userRoute = require("./routes/userRoutes");
 const authRoute = require("./routes/authRoutes");
 const blogRoute = require("./routes/blogRoutes");
+const contactRoute = require("./routes/contactRoutes");
 
 
 mongoose
@@ -35,6 +36,7 @@ mongoose
 app.use('/api/users', userRoute);
 app.use('/api', authRoute);
 app.use('/api/blogs', blogRoute);
+app.use('/api/contacts', contactRoute);
 
 
 // Test route
