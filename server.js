@@ -6,7 +6,7 @@ const app = express();
 require("dotenv").config();
 // middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000', 'https://www.acecloud.ca', 'https://acecloud-dashboard.vercel.app']
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000', 'https://www.acecloud.ca', 'https://acecloud-dashboard.vercel.app', 'https://naturals-dashboard-server.vercel.app/']
 }))
 
 
