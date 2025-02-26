@@ -4,13 +4,13 @@ const Contact = require("../models/contactSchema");
 exports.createContact = async (req, res) => {
   try {
     const { socialLinks, emails, phoneNumbers, address } = req.body;
+    console.log(req.body);
+    // Validate required fields
+    if (!emails?.length || !phoneNumbers?.length || !address) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
 
-    const newContact = new Contact({
-      socialLinks,
-      emails,
-      phoneNumbers,
-      address,
-    });
+    const newContact = new Contact({ socialLinks, emails, phoneNumbers, address });
 
     await newContact.save();
     res.status(201).json({ message: "Contact created successfully", newContact });
@@ -49,12 +49,17 @@ exports.getContactById = async (req, res) => {
 exports.updateContact = async (req, res) => {
   try {
     const { id } = req.params;
-    const { socialLinks, emails, phoneNumbers, address } = req.body;
+    const { name, socialLinks, emails, phoneNumbers, address } = req.body;
+
+    // Validate at least one field is being updated
+    if (!name && !socialLinks && !emails && !phoneNumbers && !address) {
+      return res.status(400).json({ message: "At least one field must be updated" });
+    }
 
     const updatedContact = await Contact.findByIdAndUpdate(
       id,
-      { socialLinks, emails, phoneNumbers, address },
-      { new: true }
+      { name, socialLinks, emails, phoneNumbers, address },
+      { new: true, runValidators: true } // Ensures schema rules are enforced
     );
 
     if (!updatedContact) {

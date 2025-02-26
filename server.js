@@ -22,7 +22,7 @@ const contactRoute = require("./routes/contactRoutes");
 
 mongoose
   .connect(
-    `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASS}@cluster0.mj9te36.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority&appName=Cluster0`,
+    `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASS}@cluster0.ev36k.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority&appName=Cluster0`,
   )
   .then(() => {
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -41,10 +41,10 @@ app.use('/api/contacts', contactRoute);
 
 // Test route
 app.get("/", (req, res) => {
-  res.status(200).json({ message: "Welcome to the Naturals API!" });
+  res.status(200).json({ message: "Welcome to the AceCloud API!" });
 });
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(`Naturals Server running on port ${PORT}`);
+  console.log(`AceCloud Server running on port ${PORT}`);
 });
