@@ -18,7 +18,6 @@ const loginUser = async (req, res) => {
         // Find user by email
         const user = await User.findOne({ email }).exec();
 
-        // If user does not exist, return 401 Unauthorized
         if (!user) {
             return res.status(401).json({ message: 'Incorrect username or password.' });
         }
@@ -29,18 +28,25 @@ const loginUser = async (req, res) => {
             return res.status(401).json({ message: 'Incorrect password.' });
         }
 
-        // Check device info limit (max 3 devices)
+        // Extract current devices
         const currentDevices = user.deviceInfo || [];
-        if (currentDevices.length >= 3) {
-            // Check if the provided device is already registered
-            const existingDevice = currentDevices.find(dev => dev.deviceId === deviceInfo.deviceId);
-            if (!existingDevice) {
-                return res.status(401).json({ message: 'You cannot login from this device. Use a previously registered device.' });
+
+        // Check if there's already a device registered for this OS
+        const existingDevice = currentDevices.find(dev => dev.osType === deviceInfo.osType);
+
+        // If a different device (new deviceId) is detected for the same OS & different browser, block login
+        if (existingDevice && existingDevice.deviceId !== deviceInfo.deviceId) {
+            // Allow login only if it's the same OS **and** same browser
+            if (existingDevice.browser !== deviceInfo.browser) {
+                return res.status(401).json({ message: 'You cannot log in from a new device on this OS. Use your registered device.' });
             }
         }
 
-        // Add or update device info
-        const updatedDeviceInfo = [...currentDevices.filter(dev => dev.deviceId !== deviceInfo.deviceId), deviceInfo];
+        // Add or update device info (replace existing OS entry)
+        const updatedDeviceInfo = [
+            ...currentDevices.filter(dev => dev.osType !== deviceInfo.osType || dev.browser !== deviceInfo.browser),
+            deviceInfo // Add the new/updated device for this OS and browser
+        ];
 
         // Update user document with new device info
         await User.findByIdAndUpdate(user._id, { deviceInfo: updatedDeviceInfo }, { new: true });
@@ -60,7 +66,7 @@ const loginUser = async (req, res) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
-            maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
+            maxAge: 24 * 60 * 60 * 1000, // 1 day
         });
 
         // Respond with success message and token
@@ -74,6 +80,7 @@ const loginUser = async (req, res) => {
         res.status(500).json({ message: 'Internal server error' });
     }
 };
+
 
 
 // Get User Profile

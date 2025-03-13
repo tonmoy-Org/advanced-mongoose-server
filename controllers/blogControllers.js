@@ -3,13 +3,13 @@ const Blog = require("../models/blogSchema");
 // ➤ Create a new blog
 const createBlog = async (req, res) => {
     try {
-        const { title, content, imageUrl, shortDescription } = req.body;
+        const { title, content, imageUrl } = req.body;
 
-        if (!title || !content || !imageUrl || !shortDescription) {
+        if (!title || !content || !imageUrl) {
             return res.status(400).json({ error: "All fields are required" });
         }
 
-        const newBlog = new Blog({ title, content, imageUrl, shortDescription });
+        const newBlog = new Blog({ title, content, imageUrl });
         await newBlog.save();
 
         res.status(201).json({ message: "Blog created successfully", blog: newBlog });
@@ -44,10 +44,10 @@ const getBlogById = async (req, res) => {
 // ➤ Update a blog
 const updateBlog = async (req, res) => {
     try {
-        const { title, content, imageUrl, shortDescription } = req.body;
+        const { title, content, imageUrl } = req.body;
         const updatedBlog = await Blog.findByIdAndUpdate(
             req.params.id,
-            { title, content, imageUrl, shortDescription },
+            { title, content, imageUrl },
             { new: true, runValidators: true }
         );
 
