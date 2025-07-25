@@ -1,77 +1,69 @@
 const mongoose = require('mongoose');
+const slugify = require('slugify');
 
 const blogSchema = new mongoose.Schema(
     {
-        title: { 
-            type: String, 
-            required: true, 
-            trim: true 
+        title: {
+            type: String,
+            required: true,
+            trim: true,
         },
-        title_id: {  
-            type: String, 
+        title_id: {
+            type: String,
             required: true,
             unique: true,
-            trim: true
+            trim: true,
+            index: true,
         },
-        content: { 
-            type: String, 
-            required: true 
+        content: {
+            type: String,
+            required: true,
         },
-        imageUrl: { 
-            type: String, 
-            required: true 
+        imageUrl: {
+            type: String,
+            required: true,
         },
         category: {
             type: String,
-            enum: ['technology', 'business', 'education', 'marketing'],
-            required: true
+            required: true,
+            trim: true,
         },
-        isFeatured: {
-            type: Boolean,
-            default: false
-        },
-        tags: [{
+        youtubeUrl: {
             type: String,
-            trim: true
-        }],
-        metaTitle: {
-            type: String,
-            trim: true
+            trim: true,
+            default: null,
         },
-        metaDescription: {
-            type: String,
-            trim: true
-        },
-        createdAt: { 
-            type: Date, 
-            default: Date.now 
-        },
-        updatedAt: {
-            type: Date,
-            default: Date.now
-        }
     },
-    { 
+    {
         timestamps: true,
         toJSON: { virtuals: true },
-        toObject: { virtuals: true }
+        toObject: { virtuals: true },
     }
 );
 
-// Add text index for search functionality
+// Compound text index including title_id for search
 blogSchema.index({
     title: 'text',
     content: 'text',
-    tags: 'text'
+    tags: 'text',
+    title_id: 'text',
 });
 
-// Pre-save hook to generate title_id (slug) from title
-blogSchema.pre('save', function(next) {
-    if (this.isModified('title')) {
-        this.title_id = this.title
-            .toLowerCase()
-            .replace(/[^\w\s]/gi, '')
-            .replace(/\s+/g, '_');
+// Pre-validate hook for unique, SEO-friendly slug generation
+blogSchema.pre('validate', async function (next) {
+    if (this.isModified('title') || !this.title_id) {
+        const baseSlug = slugify(this.title, { lower: true, strict: true });
+        let slug = baseSlug;
+        let count = 1;
+
+        const Blog = mongoose.models.Blog || mongoose.model('Blog', blogSchema);
+
+        while (await Blog.findOne({ title_id: slug, _id: { $ne: this._id } })) {
+            slug = `${baseSlug}-${count}`;
+            count++;
+        }
+
+        this.title_id = slug;
     }
     next();
 });

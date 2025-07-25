@@ -1,50 +1,53 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const helmet = require("helmet");
+const morgan = require("morgan");
+const dotenv = require("dotenv");
+
+dotenv.config();
+
 const app = express();
 
-require("dotenv").config();
-// middleware
+// Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000', 'https://acecloud-dashboard.vercel.app', 'https://naturals-dashboard-server.vercel.app', "https://www.acecloud.ca"]
-}))
-
+  origin: process.env.CLIENT_ORIGIN || "http://localhost:5173",
+  optionsSuccessStatus: 200
+}));
 
 app.use(express.json());
-const PORT = process.env.PORT || 5000;
+app.use(helmet()); // Adds security headers
+app.use(morgan("dev")); // Logs HTTP requests
 
-// routes
-const userRoute = require("./routes/userRoutes");
-const authRoute = require("./routes/authRoutes");
+// Import routes
 const blogRoute = require("./routes/blogRoutes");
-const contactRoute = require("./routes/contactRoutes");
 
+// Routes
+app.use("/api/v1/blogs", blogRoute);
 
-mongoose
-  .connect(
-    `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASS}@cluster0.ev36k.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority&appName=Cluster0`,
-  )
-  .then(() => {
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  })
-  .catch((err) => {
-    console.error("MongoDB connection error:", err);
-  });
-
-
-
-app.use('/api/users', userRoute);
-app.use('/api', authRoute);
-app.use('/api/blogs', blogRoute);
-app.use('/api/contacts', contactRoute);
-
-
-// Test route
 app.get("/", (req, res) => {
-  res.status(200).json({ message: "Welcome to the AceCloud API!" });
+  res.status(200).json({ message: "✅ Welcome to the MongoDB Practice Server!" });
 });
 
-// Start the server
+// MongoDB connection
+mongoose.connect(process.env.DB_URI, {
+  serverSelectionTimeoutMS: 10000,
+  socketTimeoutMS: 45000,
+})
+.then(() => console.log("✅ Connected to MongoDB!"))
+.catch((err) => {
+  console.error("❌ MongoDB connection error:", err);
+  process.exit(1); // Exit process on DB failure
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error("❌ Server error:", err.stack);
+  res.status(500).json({ error: "Something went wrong!" });
+});
+
+// Start server
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`AceCloud Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT} in ${process.env.NODE_ENV || "development"} mode`);
 });
